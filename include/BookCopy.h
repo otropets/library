@@ -13,4 +13,5 @@ public:
   Book *getBook();
   bool GetAvailability();
   ~BookCopy() {};
+  void SetAvailability(bool availability);
 };

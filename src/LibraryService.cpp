@@ -5,31 +5,47 @@
 #include "User.h"
 
 std::vector<BookCopy *>
-LibraryService::FindBookCopyByTitle(std::string bookTitle) {
+LibraryService::FindAvailableBookCopyByTitle(std::string BookTitle) {
   std::vector<BookCopy *> res;
-  Book *FoundBook = nullptr;
-  for (auto &x : BookList) {
-    std::string cur = x->GetTitle();
-    if (bookTitle == cur) {
-      FoundBook = x;
-      break;
-    }
-  }
-  if (FoundBook != nullptr) {
-    for (auto &x : BookCopyList) {
-      if (FoundBook == x->getBook()) {
-        res.push_back(x);
-      }
+  for (auto &x : BookCopyList) {
+    std::string cur_book = x->getBook()->GetTitle();
+    if (cur_book == BookTitle && x->GetAvailability() == true) {
+      res.push_back(x);
     }
   }
   return res;
 }
-bool LibraryService::CheckBookAvailabilityByTitle(std::string check_title) {}
-bool LibraryService::CheckBookAvailabilityById(int CheckBookId) {}
-bool LibraryService::CheckUserPenaltyStatus(User &user) {}
-void LibraryService::CalculatePenalty(User &user) {}
-void LibraryService::CreateRent(User &user, BookCopy &bookCopy) {}
-void LibraryService::EndRent(User &user, BookCopy &bookCopy) {}
+BookCopy *LibraryService::FindBookCopyById(int CheckBookId) {
+  for (auto &x : BookCopyList) {
+    int cur_book = x->GetBookCopyId();
+    if (cur_book == CheckBookId) {
+      return x;
+    }
+  }
+  return nullptr;
+}
+bool LibraryService::IsUserBlocked(User &user) { return user.GetBalance() < 0; }
+void LibraryService::CreateRent(User &user, BookCopy &bookCopy) {
+  std::time_t start = std::time(nullptr);
+  std::time_t end = start + (14 * 24 * 60 * 60);
+  Rent *rent = new Rent(user, bookCopy, start, end, false);
+  RentList.push_back(rent);
+  user.AddRent(rent);
+  bookCopy.SetAvailability(false);
+}
+void LibraryService::EndRent(Rent *rent) {
+  if (rent->IsOverdue()) {
+    time_t now = std::time(nullptr);
+    time_t end = rent->GetEndDate();
+    int days = (now - end) / (24 * 60 * 60);
+    rent->GetUser().AddToBalance(-(days));
+  }
+  rent->GetUser().RemoveRent(rent);
+  RentList.erase(std::remove(RentList.begin(), RentList.end(), rent),
+                 RentList.end());
+  rent->GetBookCopy().SetAvailability(true);
+  delete rent;
+};
 void LibraryService::AddBook(Book *book) { BookList.push_back(book); };
 void LibraryService::AddBookCopy(BookCopy *bookCopy) {
   BookCopyList.push_back(bookCopy);

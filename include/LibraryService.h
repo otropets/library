@@ -14,13 +14,11 @@ private:
   std::vector<Rent *> RentList;
 
 public:
-  std::vector<BookCopy *> FindBookCopyByTitle(std::string);
-  bool CheckBookAvailabilityByTitle(std::string);
-  bool CheckBookAvailabilityById(int);
-  bool CheckUserPenaltyStatus(User &);
-  void CalculatePenalty(User &);
+  std::vector<BookCopy *> FindAvailableBookCopyByTitle(std::string);
+  BookCopy *FindBookCopyById(int);
+  bool IsUserBlocked(User &);
   void CreateRent(User &, BookCopy &);
-  void EndRent(User &, BookCopy &);
-  void AddBook(Book *);
-  void AddBookCopy(BookCopy *);
+  void EndRent(Rent *rent);
+  void AddBook(Book *book);
+  void AddBookCopy(BookCopy *bookCopy);
 };
