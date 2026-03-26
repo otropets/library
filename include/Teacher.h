@@ -7,13 +7,9 @@ private:
 
 public:
   Teacher(int UserId, std::string FirstName, std::string LastName,
-          LibraryService &libraryService, int TeacherId)
-      : User(UserId, FirstName, LastName, libraryService),
-        TeacherId(TeacherId) {};
+          int TeacherId)
+      : User(UserId, FirstName, LastName, TEACHER), TeacherId(TeacherId) {};
 
   int GetMaxBooksAmount() override;
   int GetTeacherId();
-  void BorrowBook();
-  void ReturnBook();
-  void PayPenalty();
 };

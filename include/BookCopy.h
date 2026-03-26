@@ -7,8 +7,8 @@ private:
   bool availability;
 
 public:
-  BookCopy(int BookCopyId, Book &book, bool availability)
-      : BookCopyId(BookCopyId), book(book), availability(availability) {};
+  BookCopy(int BookCopyId, Book &book)
+      : BookCopyId(BookCopyId), book(book), availability(true) {};
   int GetBookCopyId();
   Book *getBook();
   bool GetAvailability();

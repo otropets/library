@@ -13,7 +13,7 @@ private:
 
 public:
   Rent(User &User, BookCopy &BookCopy, std::time_t StartDate,
-       std::time_t EndDate, bool PenaltyPaid)
+       std::time_t EndDate)
       : bookCopy(BookCopy), user(User), StartDate(StartDate),
         EndDate(EndDate) {};
 
