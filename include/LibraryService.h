@@ -1,24 +1,24 @@
 #pragma once
 #include "Book.h"
+#include "BookCopy.h"
+#include "Rent.h"
+#include "User.h"
+#include <memory>
 #include <string>
 #include <vector>
-class User;
-class BookCopy;
-class Rent;
 
 class LibraryService {
 private:
-  std::vector<Book *> BookList;
-  std::vector<User *> UserList;
-  std::vector<BookCopy *> BookCopyList;
-  std::vector<Rent *> RentList;
+  std::vector<std::unique_ptr<Book>> BookList;
+  std::vector<std::unique_ptr<User>> UserList;
+  std::vector<std::unique_ptr<BookCopy>> BookCopyList;
+  std::vector<std::unique_ptr<Rent>> RentList;
 
 public:
   LibraryService();
   std::vector<BookCopy *> FindAvailableBookCopyByTitle(std::string);
   BookCopy *FindBookCopyById(int);
 
-  //+
   bool CreateBook(User &, int, std::string, std::string, Language);
   bool DeleteBook(User &, int);
 
@@ -37,6 +37,5 @@ public:
   bool DeleteUser(User &, User *);
   bool PayPenalty(User &);
   bool IsUserBlocked(User &);
-  ~LibraryService();
   User *FindUserById(int);
 };

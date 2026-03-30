@@ -10,8 +10,7 @@
 #include <iostream>
 
 LibraryService::LibraryService() {
-  User *admin = new Librarian(1, "Admin", "Librarian", 1);
-  UserList.push_back(admin);
+  UserList.push_back(std::make_unique<Librarian>(1, "Admin", "Librarian", 1));
 }
 std::vector<BookCopy *>
 LibraryService::FindAvailableBookCopyByTitle(std::string BookTitle) {
@@ -19,7 +18,8 @@ LibraryService::FindAvailableBookCopyByTitle(std::string BookTitle) {
   for (auto &x : BookCopyList) {
     std::string cur_book = x->getBook()->GetTitle();
     if (cur_book == BookTitle && x->GetAvailability() == true) {
-      res.push_back(x);
+
+      res.push_back(x.get());
     }
   }
   return res;
@@ -29,7 +29,7 @@ BookCopy *LibraryService::FindBookCopyById(int CheckBookId) {
   for (auto &x : BookCopyList) {
     int cur_book = x->GetBookCopyId();
     if (cur_book == CheckBookId) {
-      return x;
+      return x.get();
     }
   }
   return nullptr;
@@ -41,8 +41,13 @@ bool LibraryService::CreateBook(User &cur_user, int bookId, std::string title,
     std::cout << "Permission declined" << std::endl;
     return false;
   }
-  Book *book = new Book(bookId, title, author, lang);
-  BookList.push_back(book);
+  for (auto &x : BookList) {
+    if (x->GetBookId() == bookId) {
+      std::cout << "Book with such ID already exists!" << std::endl;
+      return false;
+    }
+  }
+  BookList.push_back(std::make_unique<Book>(bookId, title, author, lang));
   std::cout << "Book " << title << " was succesfully created" << std::endl;
   return true;
 }
@@ -51,12 +56,16 @@ bool LibraryService::DeleteBook(User &cur_user, int bookId) {
     std::cout << "Permission declined" << std::endl;
     return false;
   }
-
+  for (auto &rent : RentList) {
+    if (rent->GetBookCopy().getBook()->GetBookId() == bookId) {
+      std::cout << "Cannot delete, book has active rents" << std::endl;
+      return false;
+    }
+  }
   for (auto it = BookList.begin(); it != BookList.end(); it++) {
     if ((*it)->GetBookId() == bookId) {
       std::cout << "Book " << (*it)->GetTitle() << " was succesfully deleted"
                 << std::endl;
-      delete *it;
       BookList.erase(it);
       return true;
     }
@@ -69,11 +78,17 @@ bool LibraryService::AddBookCopy(User &cur_user, int BookCopyId, int bookId) {
     std::cout << "Permission declined" << std::endl;
     return false;
   }
+  for (auto &x : BookCopyList) {
+    if (x->GetBookCopyId() == BookCopyId) {
+      std::cout << "Book copy with such ID already exists!" << std::endl;
+      return false;
+    }
+  }
+
   for (auto it = BookList.begin(); it != BookList.end(); it++) {
     if ((*it)->GetBookId() == bookId) {
-      BookCopy *bc = new BookCopy(BookCopyId, **it);
-      BookCopyList.push_back(bc);
-      std::cout << "Book copy of " << (*bc).getBook()->GetTitle()
+      BookCopyList.push_back(std::make_unique<BookCopy>(BookCopyId, **it));
+      std::cout << "Book copy of " << (**it).GetTitle()
                 << " was succesfully created" << std::endl;
       return true;
     }
@@ -85,12 +100,16 @@ bool LibraryService::DeleteBookCopy(User &cur_user, int bookCopyId) {
     std::cout << "Permission declined" << std::endl;
     return false;
   }
-
+  for (auto &rent : RentList) {
+    if (rent->GetBookCopy().GetBookCopyId() == bookCopyId) {
+      std::cout << "Cannot delete, book copy has active rent" << std::endl;
+      return false;
+    }
+  }
   for (auto it = BookCopyList.begin(); it != BookCopyList.end(); it++) {
     if ((*it)->GetBookCopyId() == bookCopyId) {
       std::cout << "Book copy of " << (**it).getBook()->GetTitle()
                 << " was succesfully deleted" << std::endl;
-      delete *it;
       BookCopyList.erase(it);
       return true;
     }
@@ -128,9 +147,8 @@ bool LibraryService::BorrowBookCopy(User &user, int BookCopyId) {
   std::time_t start = std::time(nullptr);
   std::time_t end = start + (14 * 24 * 60 * 60);
   int rentId = RentList.size() + 1;
-  Rent *rent = new Rent(user, rentId, *bc, start, end);
-  RentList.push_back(rent);
-  user.AddRent(rent);
+  RentList.push_back(std::make_unique<Rent>(user, rentId, *bc, start, end));
+  user.AddRent(RentList.back().get());
   bc->SetAvailability(false);
   std::cout << "Book " << bc->getBook()->GetTitle()
             << " was succesfully borrowed" << std::endl;
@@ -148,8 +166,7 @@ bool LibraryService::ReturnBookCopy(User &cur_user, int bookCopykId) {
         int days = (now - end) / (24 * 60 * 60);
         (*it)->GetUser().AddToBalance(-(days));
       }
-      (*it)->GetUser().RemoveRent(*it);
-      delete (*it);
+      (*it)->GetUser().RemoveRent((*it).get());
       RentList.erase(it);
       std::cout << "Book Copy was succesfully returned" << std::endl;
       return true;
@@ -166,8 +183,14 @@ bool LibraryService::CreateStudent(User &cur_user, int UserId,
     std::cout << "Access denied" << std::endl;
     return false;
   }
-  User *new_user = new Student(UserId, FirstName, LastName, StudentId);
-  UserList.push_back(new_user);
+  for (auto &x : UserList) {
+    if (x->GetUserId() == UserId) {
+      std::cout << "User with such ID already exists!" << std::endl;
+      return false;
+    }
+  }
+  UserList.push_back(
+      std::make_unique<Student>(UserId, FirstName, LastName, StudentId));
   return true;
 }
 bool LibraryService::CreateTeacher(User &cur_user, int UserId,
@@ -177,8 +200,14 @@ bool LibraryService::CreateTeacher(User &cur_user, int UserId,
     std::cout << "Access denied" << std::endl;
     return false;
   }
-  User *new_user = new Teacher(UserId, FirstName, LastName, TeacherId);
-  UserList.push_back(new_user);
+  for (auto &x : UserList) {
+    if (x->GetUserId() == UserId) {
+      std::cout << "User with such ID already exists!" << std::endl;
+      return false;
+    }
+  }
+  UserList.push_back(
+      std::make_unique<Teacher>(UserId, FirstName, LastName, TeacherId));
   return true;
 }
 bool LibraryService::CreateLibrarian(User &cur_user, int UserId,
@@ -188,8 +217,14 @@ bool LibraryService::CreateLibrarian(User &cur_user, int UserId,
     std::cout << "Access denied" << std::endl;
     return false;
   }
-  User *new_user = new Librarian(UserId, FirstName, LastName, LibrarianId);
-  UserList.push_back(new_user);
+  for (auto &x : UserList) {
+    if (x->GetUserId() == UserId) {
+      std::cout << "User with such ID already exists!" << std::endl;
+      return false;
+    }
+  }
+  UserList.push_back(
+      std::make_unique<Librarian>(UserId, FirstName, LastName, LibrarianId));
   return true;
 }
 bool LibraryService::DeleteUser(User &cur_user, User *user) {
@@ -201,32 +236,26 @@ bool LibraryService::DeleteUser(User &cur_user, User *user) {
     std::cout << "User doesn't exist" << std::endl;
     return false;
   }
-  UserList.erase(std::remove(UserList.begin(), UserList.end(), user),
-                 UserList.end());
-  delete user;
+  for (auto it = UserList.begin(); it != UserList.end(); it++) {
+    if (it->get() == user) {
+      UserList.erase(it);
+      break;
+    }
+  }
   std::cout << "User was succefully deleted" << std::endl;
   return true;
 };
 
 bool LibraryService::PayPenalty(User &user) {
+  std::cout << "Penalty was succesfully paid" << std::endl;
   user.AddToBalance(-user.GetBalance());
   return true;
-}
-LibraryService::~LibraryService() {
-  for (auto book : BookList)
-    delete book;
-  for (auto copy : BookCopyList)
-    delete copy;
-  for (auto rent : RentList)
-    delete rent;
-  for (auto user : UserList)
-    delete user;
 }
 
 User *LibraryService::FindUserById(int UserId) {
   for (auto &x : UserList) {
     if (x->GetUserId() == UserId) {
-      return x;
+      return x.get();
     }
   }
   std::cout << "User was not found" << std::endl;
