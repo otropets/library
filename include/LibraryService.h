@@ -14,27 +14,29 @@ private:
   std::vector<Rent *> RentList;
 
 public:
+  LibraryService();
   std::vector<BookCopy *> FindAvailableBookCopyByTitle(std::string);
   BookCopy *FindBookCopyById(int);
 
-  bool CreateBook(int bookId, std::string title, std::string author,
-                  Language lang);
-  bool DeleteBook(Book *book);
+  //+
+  bool CreateBook(User &, int, std::string, std::string, Language);
+  bool DeleteBook(User &, int);
 
-  bool AddBookCopy(int BookCopyId, Book &book);
-  bool DeleteBookCopy(BookCopy *bookCopy);
+  bool AddBookCopy(User &, int, int);
+  bool DeleteBookCopy(User &, int);
 
-  bool BorrowBookCopy(User &user, BookCopy &bookCopy);
-  bool ReturnBookCopy(Rent *rent);
+  bool BorrowBookCopy(User &, int BookCopyId);
+  bool ReturnBookCopy(User &cur_user, int bookCopyId);
 
-  bool CreateStudent(int UserId, std::string FirstName, std::string LastName,
-                     int StudentId);
-  bool CreateTeacher(int UserId, std::string FirstName, std::string LastName,
-                     int TeacherId);
-  bool CreateLibrarian(int UserId, std::string FirstName, std::string LastName,
-                       int LibrarianId);
-  bool DeleteUser(User *user);
+  bool CreateStudent(User &cur_user, int UserId, std::string FirstName,
+                     std::string LastName, int StudentId);
 
-  bool PayPenalty(User &user);
+  bool CreateTeacher(User &, int, std::string, std::string, int);
+  bool CreateLibrarian(User &, int, std::string, std::string, int);
+
+  bool DeleteUser(User &, User *);
+  bool PayPenalty(User &);
   bool IsUserBlocked(User &);
+  ~LibraryService();
+  User *FindUserById(int);
 };
