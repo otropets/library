@@ -1,0 +1,12 @@
+## Overview
+This project is about library management system, having 3 type of users including librarian, who can manage all the processes through library service. The librarian can create book and its book copies, create rents and users.  Every rent has its status end due date, every user with overdue will be blocked from borrowing new books. Different types of users have different amount of allowed borrowed books amount. 
+All was done in C++17, including CMake + Ninja for building and running project, GTest for writing unit-tests,  also having clear service layer arhitecture and using of smart-pointers to avoid any memory leaks.
+
+## Build and Run: 
+mkdir build && cd build
+cmake -G Ninja ..
+ninja
+./Library
+
+## Run tests
+./LibraryTests
