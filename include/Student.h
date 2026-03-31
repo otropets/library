@@ -1,8 +1,6 @@
 #pragma once
 #include "User.h"
 
-class BookCopy;
-
 class Student : public User {
 private:
   int StudentId;

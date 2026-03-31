@@ -1,7 +1,7 @@
 #pragma once
 #include "Book.h"
 #include "User.h"
-class LibraryService;
+
 class Librarian : public User {
 private:
   int LibrarianId;
